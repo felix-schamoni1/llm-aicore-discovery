@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, Optional
 
-import torch
 from fastapi import FastAPI
 from app.datamodel import (
     EmbeddingRequest,
@@ -56,7 +55,7 @@ def embed(data: EmbeddingRequest) -> EmbeddingReply:
 
 @app.post("/complete")
 @timing_decorator
-def complete(completion: CompletionRequest):
+def complete(completion: CompletionRequest) -> str:
     return srv_llm.complete(
         [d.model_dump() for d in completion.messages], **completion.config
     )

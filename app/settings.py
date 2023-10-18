@@ -13,6 +13,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)-s %(levelname)-s - %(message)s",
 )
 has_cuda = torch.cuda.is_available()
+has_mps = torch.backends.mps.is_available()
 
 embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 llm_model = os.getenv("LLM_MODEL", "mistralai/Mistral-7B-Instruct-v0.1")
@@ -31,7 +32,7 @@ def timing_decorator(func):
         result = func(*args, **kwargs)
         end_time = time.perf_counter()
         elapsed_time = end_time - start_time
-        logging.info(f"%s took %.6f seconds to execute.", func, elapsed_time)
+        logging.info(f"%s took %.4f seconds to execute.", func, elapsed_time)
         return result
 
     return wrapper

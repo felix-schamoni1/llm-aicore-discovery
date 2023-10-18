@@ -2,7 +2,13 @@ from typing import List
 
 import numpy as np
 
-from app.settings import has_cuda, embedding_model, model_folder, timing_decorator
+from app.settings import (
+    has_cuda,
+    embedding_model,
+    model_folder,
+    timing_decorator,
+    has_mps,
+)
 
 
 class EmbeddingService:
@@ -12,7 +18,7 @@ class EmbeddingService:
 
         self._st = SentenceTransformer(
             embedding_model,
-            device="cuda" if has_cuda else "cpu",
+            device="cuda" if has_cuda else "mps" if has_mps else "cpu",
             cache_folder=model_folder,
         )
 
