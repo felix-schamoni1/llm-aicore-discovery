@@ -1,0 +1,9 @@
+transformers
+fastapi
+sentence-transformers
+torch
+pydantic
+uvicorn
+httpx
+pytest
+accelerate
