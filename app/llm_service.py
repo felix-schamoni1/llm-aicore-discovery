@@ -1,4 +1,7 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict
+
 from app.settings import llm_model, has_cuda, timing_decorator, has_mps
 
 
@@ -15,7 +18,9 @@ class LLMService:
         )
         self._tokenizer = AutoTokenizer.from_pretrained(llm_model)
         self._device = "cuda" if has_cuda else "mps" if has_mps else "cpu"
+        self._tpe = ThreadPoolExecutor(1)
 
+    @timing_decorator
     def complete(self, data: List[Dict[str, str]], **kwargs) -> str:
         encoded_values = self._tokenizer.apply_chat_template(
             data, return_tensors="pt"
@@ -24,4 +29,8 @@ class LLMService:
         tokens = encoded_values.shape[-1]
 
         generated_ids = self._llm.generate(encoded_values, **kwargs)
-        return self._tokenizer.batch_decode(generated_ids[:, tokens:])[0]
+        return self._tokenizer.batch_decode(generated_ids[:, tokens:])[0].rstrip("</s>")
+
+    async def complete_async(self, data: List[Dict[str, str]], **kwargs) -> str:
+        future = self._tpe.submit(self.complete, data, **kwargs)
+        return await asyncio.wrap_future(future)

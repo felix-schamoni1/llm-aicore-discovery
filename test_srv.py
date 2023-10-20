@@ -1,4 +1,5 @@
 import pytest
+
 from app.datamodel import (
     EmbeddingRequest,
     EmbeddingTypeEnum,
@@ -32,6 +33,8 @@ def test_embed_all(test_client):
             ).model_dump(),
         ).json()
 
+
+def test_completion(test_client):
     print(
         test_client.post(
             "/complete",
@@ -45,3 +48,11 @@ def test_embed_all(test_client):
             ).model_dump(),
         ).json()
     )
+
+
+def test_completion_ws(test_client):
+    with test_client.websocket_connect("/ws") as sock:
+        sock.send_text("Hello, how are you?")
+        print(sock.receive_text())
+        sock.send_text("Can you tell me on which data you were trained?")
+        print(sock.receive_text())

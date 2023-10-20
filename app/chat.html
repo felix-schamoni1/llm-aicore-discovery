@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>sovanta-GPT</title>
+    <style>
+        body {
+            font-family: Calibri, sans-serif;
+            background-color: #222;
+            color: #FFF;
+        }
+
+        #container {
+            width: 80%;
+            margin:auto;
+        }
+
+        input, button {
+            color: #fff;
+            background: transparent;
+            border: 1px solid #444;
+            outline-style: none;
+            padding: 4px;
+            min-width: 60px;
+        }
+        input {
+            flex-grow: 1;
+            margin-right: 8px;
+        }
+        #form {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        button {
+            line-height: 30px;
+            width: 80px;
+        }
+        button.disabled {
+            color: #444;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #444;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 8px;
+            line-height: 16px;
+            font-size: 16px;
+        }
+
+        li.user {
+            background: #3aaa35;
+        }
+
+        .time {
+            font-size: 8pt;
+            margin-right: 16px;
+            line-height:16px;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <h1>sovanta-GPT Chat</h1>
+    <div id="form">
+        <input type="text" id="messageText" placeholder="Enter text here..." autocomplete="off"/>
+        <button id="sendMessage">Send</button>
+    </div>
+    <ul id='messages'>
+    </ul>
+    <script>
+        const messages = document.getElementById('messages');
+        const sendButton = document.getElementById('sendMessage');
+        let disabled = false;
+
+        function updateState() {
+            sendButton.disabled = disabled;
+            sendButton.className = disabled ? "disabled": "";
+        }
+
+        function addMessage(text, user = false) {
+            const message = document.createElement('li');
+            if (user) {
+                message.className = "user";
+            }
+            const dt = new Date();
+            const dtContent = document.createElement("span");
+            dtContent.textContent = dt.toLocaleTimeString();
+            dtContent.className = "time";
+
+            message.appendChild(dtContent);
+
+
+            const content = document.createElement("span");
+            content.textContent = text;
+            message.appendChild(content);
+            messages.appendChild(message);
+        }
+
+        const ws = new WebSocket("ws://localhost:8000/ws");
+        ws.onmessage = function (event) {
+            disabled = false;
+            updateState();
+            addMessage(event.data);
+        };
+
+        function send() {
+            const input = document.getElementById("messageText");
+            addMessage(input.value, true);
+            ws.send(input.value);
+            input.value = '';
+            disabled = true;
+            updateState();
+        }
+
+        sendButton.addEventListener("click", () => !disabled && send());
+        document.body.addEventListener("keydown", (evt) => {
+            !disabled && (evt.key === "Enter") && send();
+        });
+    </script>
+</div>
+</body>
+</html>

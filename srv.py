@@ -1,8 +1,11 @@
+import collections
+import copy
 from typing import TYPE_CHECKING, Optional
 
 from fastapi import FastAPI
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, HTMLResponse
+from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from app.datamodel import (
     EmbeddingRequest,
@@ -10,6 +13,7 @@ from app.datamodel import (
     InfoReply,
     EmbeddingTypeEnum,
     CompletionRequest,
+    ChatMessage,
 )
 from app.settings import embedding_model, timing_decorator
 
@@ -20,6 +24,8 @@ if TYPE_CHECKING:
 app = FastAPI()
 srv_embed: Optional["EmbeddingService"] = None
 srv_llm: Optional["LLMService"] = None
+
+base_config = {"do_sample": True, "max_new_tokens": 200}
 
 
 @app.on_event("startup")
@@ -33,9 +39,15 @@ def startup():
     srv_llm = LLMService()
 
 
-@app.get("/")
-def index() -> InfoReply:
+@app.get("/info")
+def info() -> InfoReply:
     return InfoReply(embedding_model=embedding_model)
+
+
+@app.get("/")
+def index():
+    with open("app/chat.html") as fp:
+        return HTMLResponse(fp.read())
 
 
 @app.post("/embed")
@@ -59,16 +71,33 @@ def embed(data: EmbeddingRequest) -> EmbeddingReply:
 @app.post("/complete")
 @timing_decorator
 def complete(completion: CompletionRequest) -> str:
-    base_config = {"do_sample": True, "max_new_tokens": 200}
-    base_config.update(completion.config)
-    return srv_llm.complete(
-        [d.model_dump() for d in completion.messages], **base_config
-    )
+    config = copy.copy(base_config)
+    config.update(completion.config)
+    return srv_llm.complete([d.model_dump() for d in completion.messages], **config)
 
 
 @app.exception_handler(Exception)
 def handle_error(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"message": str(exc)})
+
+
+@app.websocket("/ws")
+async def websocket(ws: WebSocket):
+    await ws.accept()
+
+    conversation = collections.deque(maxlen=20)
+
+    try:
+        while True:
+            user_text = await ws.receive_text()
+            conversation.append(ChatMessage(role="user", content=user_text))
+            response = await srv_llm.complete_async(
+                [d.model_dump() for d in conversation], **base_config
+            )
+            conversation.append(ChatMessage(role="assistant", content=response))
+            await ws.send_text(response)
+    except WebSocketDisconnect:
+        pass
 
 
 if __name__ == "__main__":
