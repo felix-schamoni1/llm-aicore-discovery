@@ -1,6 +1,9 @@
 from typing import TYPE_CHECKING, Optional
 
 from fastapi import FastAPI
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
 from app.datamodel import (
     EmbeddingRequest,
     EmbeddingReply,
@@ -56,9 +59,16 @@ def embed(data: EmbeddingRequest) -> EmbeddingReply:
 @app.post("/complete")
 @timing_decorator
 def complete(completion: CompletionRequest) -> str:
+    base_config = {"do_sample": True, "max_new_tokens": 200}
+    base_config.update(completion.config)
     return srv_llm.complete(
-        [d.model_dump() for d in completion.messages], **completion.config
+        [d.model_dump() for d in completion.messages], **base_config
     )
+
+
+@app.exception_handler(Exception)
+def handle_error(request: Request, exc: Exception):
+    return JSONResponse(status_code=500, content={"message": str(exc)})
 
 
 if __name__ == "__main__":
