@@ -24,12 +24,12 @@ FROM --platform=amd64 nvcr.io/nvidia/pytorch:23.09-py3 as base
 
 WORKDIR /workspace
 ENV PATH="/usr/local/lib/python3.10/bin:$PATH"
-
+RUN python -c "import torch; print(torch.__version__)" && pip show torch
 COPY requirements.txt requirements.txt
 COPY constraints.txt constraints.txt
 COPY srv.py srv.py
 COPY app/ app/
 
-RUN pip install -r requirements.txt -c constraints.txt
+RUN pip install -r requirements.txt
 
 ENTRYPOINT ["python", "srv.py"]
