@@ -103,7 +103,7 @@
             messages.appendChild(message);
         }
 
-        const ws = new WebSocket("ws://localhost:8000/ws");
+        const ws = new WebSocket("ws://" + window.location.hostname + ":8000/ws");
         ws.onmessage = function (event) {
             disabled = false;
             updateState();
