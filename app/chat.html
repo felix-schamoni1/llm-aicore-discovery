@@ -14,7 +14,7 @@
             margin:auto;
         }
 
-        input, button {
+        input, button, textarea {
             color: #fff;
             background: transparent;
             border: 1px solid #444;
@@ -22,19 +22,24 @@
             padding: 4px;
             min-width: 60px;
         }
-        input {
+        input, textarea {
             flex-grow: 1;
             margin-right: 8px;
         }
-        #form {
+        .form {
             display: flex;
             width: 100%;
             justify-content: space-between;
+            min-height:80px;
         }
 
         button {
             line-height: 30px;
             width: 80px;
+        }
+        button:not(.disabled):hover {
+            background-color:#444;
+            cursor:pointer;
         }
         button.disabled {
             color: #444;
@@ -43,6 +48,8 @@
         ul {
             list-style: none;
             padding: 0;
+            max-height: 65vh;
+            overflow-y: auto;
         }
 
         li {
@@ -63,22 +70,92 @@
             margin-right: 16px;
             line-height:16px;
         }
+        #config {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        #config div {
+            display: flex;
+            flex-direction: row;
+            width: 25%;
+            justify-content: space-between;
+            min-height: 22px;
+        }
+
+        pre {
+            background-color: #222222;
+            font-size: 10pt;
+            padding: 8px;
+            margin-left: 16px;
+        }
+
+        #config div input {
+            flex-grow: 0;
+            flex-basis: 30%;
+        }
     </style>
 </head>
 <body>
 <div id="container">
     <h1>sovanta-GPT Chat</h1>
-    <div id="form">
-        <input type="text" id="messageText" placeholder="Enter text here..." autocomplete="off"/>
-        <button id="sendMessage">Send</button>
-    </div>
     <ul id='messages'>
     </ul>
+    <div class="form">
+        <textarea id="messageText" placeholder="Enter text here..." autocomplete="off"></textarea>
+        <button id="sendMessage">Send</button>
+    </div>
+    <h2>Config</h2>
+    <div id="config">
+        <div>
+            <label for="max_new_tokens">max_new_tokens</label>
+            <input type="number" id="max_new_tokens" value="200" />
+        </div>
+        <div>
+            <label for="max_new_tokens">min_length</label>
+            <input type="number" id="min_length" value="" />
+        </div>
+        <div>
+            <label for="max_time">max_time (s)</label>
+            <input type="number" id="max_time" value="" />
+        </div>
+        <div>
+            <label for="do_sample">do_sample</label>
+            <input type="checkbox" id="do_sample" checked />
+        </div>
+        <!--<div>
+            <label for="num_beams">num_beams</label>
+            <input type="number" id="num_beams" value="1" />
+        </div>-->
+        <div>
+            <label for="temperature">temperature</label>
+            <input type="number" id="temperature" value="1.0" />
+        </div>
+        <div>
+            <label for="top_k">top_k</label>
+            <input type="number" id="top_k" value="50" />
+        </div>
+    </div>
     <script>
         const messages = document.getElementById('messages');
         const sendButton = document.getElementById('sendMessage');
+        const configArea = document.getElementById('config');
         let disabled = false;
 
+
+        function parseConfig() {
+            const config = {};
+            const els = configArea.getElementsByTagName("input");
+            for(let i=0;i<els.length;i++) {
+                const el = els[i];
+                const name = el.id;
+                if(el.type === "checkbox") {
+                    config[name] = el.checked;
+                } else if(el.type === "number" && !Number.isNaN(el.valueAsNumber)) {
+                    config[name] = el.valueAsNumber;
+                }
+            }
+            return config;
+        }
         function updateState() {
             sendButton.disabled = disabled;
             sendButton.className = disabled ? "disabled": "";
@@ -98,7 +175,19 @@
 
 
             const content = document.createElement("span");
-            content.textContent = text;
+
+            let parts = text.split("```");
+            let out = parts[0];
+            for (let i = 1; i < parts.length; i++) {
+              if (i % 2 === 1) {
+                out += "<pre>";
+              } else {
+                out += "</pre>";
+              }
+
+              out += parts[i];
+            }
+            content.innerHTML = out.replace(/\n/g, "<br/>");
             message.appendChild(content);
             messages.appendChild(message);
         }
@@ -113,7 +202,16 @@
         function send() {
             const input = document.getElementById("messageText");
             addMessage(input.value, true);
-            ws.send(input.value);
+            const cfg = parseConfig();
+            ws.send(JSON.stringify({
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": input.value
+                    }
+                ],
+                "config": cfg
+            }));
             input.value = '';
             disabled = true;
             updateState();

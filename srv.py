@@ -1,5 +1,6 @@
 import collections
 import copy
+import logging
 from typing import TYPE_CHECKING, Optional
 
 from fastapi import FastAPI
@@ -89,10 +90,15 @@ async def websocket(ws: WebSocket):
 
     try:
         while True:
-            user_text = await ws.receive_text()
-            conversation.append(ChatMessage(role="user", content=user_text))
+            user_in = CompletionRequest(**await ws.receive_json())
+            logging.info("Handling: %s", user_in)
+            conversation.append(user_in.messages[0])
+
+            config = copy.copy(base_config)
+            config.update(user_in.config)
+
             response = await srv_llm.complete_async(
-                [d.model_dump() for d in conversation], **base_config
+                [d.model_dump() for d in conversation], **config
             )
             conversation.append(ChatMessage(role="assistant", content=response))
             await ws.send_text(response)
