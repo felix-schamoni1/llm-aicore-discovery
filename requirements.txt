@@ -8,3 +8,4 @@ httpx
 pytest
 accelerate
 websockets
+flash-attn

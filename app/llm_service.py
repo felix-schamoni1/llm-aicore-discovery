@@ -20,6 +20,7 @@ class LLMService:
             llm_model,
             device_map="auto" if has_cuda else "mps" if has_mps else "cpu",
             torch_dtype=torch.float16 if (has_cuda or has_mps) else torch.float32,
+            use_flash_attention_2=has_cuda,
         )
 
         self._tokenizer: Union[
