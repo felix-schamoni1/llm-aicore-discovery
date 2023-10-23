@@ -4,7 +4,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Iterator, Union
 
-from torch.cuda import OutOfMemoryError
+from torch.cuda import OutOfMemoryError, empty_cache
 
 from app.datamodel import ChatMessage
 from app.settings import llm_model, has_cuda, timing_decorator, has_mps
@@ -78,6 +78,9 @@ class LLMService:
             loop = asyncio.get_event_loop()
             loop.stop()
             raise exc
+        finally:
+            if has_cuda:
+                empty_cache()
 
 
 if __name__ == "__main__":
