@@ -74,7 +74,8 @@ def embed(data: EmbeddingRequest) -> EmbeddingReply:
 def complete(completion: CompletionRequest) -> str:
     config = copy.copy(base_config)
     config.update(completion.config)
-    return srv_llm.complete([d.model_dump() for d in completion.messages], **config)
+    res = list(srv_llm.complete(completion.messages, **config))
+    return res[-2]
 
 
 @app.exception_handler(Exception)
@@ -97,11 +98,16 @@ async def websocket(ws: WebSocket):
             config = copy.copy(base_config)
             config.update(user_in.config)
 
-            response = await srv_llm.complete_async(
-                [d.model_dump() for d in conversation], **config
-            )
-            conversation.append(ChatMessage(role="assistant", content=response))
-            await ws.send_text(response)
+            output = None
+
+            for message in srv_llm.complete(list(conversation), **config):
+                await ws.send_text(message)
+                if message != "<FINISH>":
+                    output = message
+
+            if output:
+                conversation.append(ChatMessage(role="assistant", content=output))
+
     except WebSocketDisconnect:
         pass
 

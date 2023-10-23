@@ -2,6 +2,9 @@
 <html>
 <head>
     <title>sovanta-GPT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"
+            integrity="sha512-rfX4p3RNnxdwLT3wWP1K0NR3ztTobn+sISlT9WhxDDK00zNYbQ6MCHA5OHm0hqKAzEMXYCgFrp8iY/ER5MkXqA=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         body {
             font-family: Calibri, sans-serif;
@@ -161,22 +164,34 @@
             sendButton.className = disabled ? "disabled": "";
         }
 
-        function addMessage(text, user = false) {
-            const message = document.createElement('li');
-            if (user) {
-                message.className = "user";
+        function addMessage(text, user = false, update_last = false) {
+            let messageNode;
+            let dateSpanNode;
+            let textContentSpanNode;
+
+            if (!update_last) {
+                messageNode = document.createElement('li');
+                if (user) {
+                    messageNode.className = "user";
+                }
+                dateSpanNode = document.createElement("span");
+                dateSpanNode.className = "time";
+                messageNode.appendChild(dateSpanNode);
+                textContentSpanNode = document.createElement("span");
+                messageNode.appendChild(textContentSpanNode);
+                messages.appendChild(messageNode);
+            } else {
+                const els = messages.getElementsByTagName("li");
+                messageNode = els[els.length -1];
+                const spans =messageNode.getElementsByTagName("span");
+                dateSpanNode = spans[0];
+                textContentSpanNode = spans[1];
             }
             const dt = new Date();
-            const dtContent = document.createElement("span");
-            dtContent.textContent = dt.toLocaleTimeString();
-            dtContent.className = "time";
 
-            message.appendChild(dtContent);
+            dateSpanNode.textContent = dt.toLocaleTimeString();
 
-
-            const content = document.createElement("span");
-
-            let parts = text.split("```");
+            /*let parts = text.split("```");
             let out = parts[0];
             for (let i = 1; i < parts.length; i++) {
               if (i % 2 === 1) {
@@ -186,17 +201,18 @@
               }
 
               out += parts[i];
-            }
-            content.innerHTML = out.replace(/\n/g, "<br/>");
-            message.appendChild(content);
-            messages.appendChild(message);
+            }*/
+            textContentSpanNode.innerHTML = marked.parse(text);
         }
 
         const ws = new WebSocket("ws://" + window.location.hostname + ":8000/ws");
         ws.onmessage = function (event) {
-            disabled = false;
-            updateState();
-            addMessage(event.data);
+            if(event.data === '<FINISH>') {
+                disabled = false;
+                updateState();
+            } else {
+                addMessage(event.data, false, event.data !== '<START>');
+            }
         };
 
         function send() {
