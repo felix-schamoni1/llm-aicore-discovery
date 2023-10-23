@@ -10,13 +10,26 @@ from app.datamodel import ChatMessage
 from app.settings import llm_model, has_cuda, timing_decorator, has_mps
 
 
+def disable_grad():
+    import torch
+
+    torch.set_grad_enabled(False)
+
+
 class LLMService:
     @timing_decorator
     def __init__(self):
-        from transformers import AutoModelForCausalLM, AutoTokenizer, LlamaTokenizerFast
+        from transformers import (
+            AutoModelForCausalLM,
+            AutoTokenizer,
+            LlamaTokenizerFast,
+            MistralForCausalLM,
+        )
         import torch
 
-        self._llm = AutoModelForCausalLM.from_pretrained(
+        disable_grad()
+
+        self._llm: MistralForCausalLM = AutoModelForCausalLM.from_pretrained(
             llm_model,
             device_map="auto" if has_cuda else "mps" if has_mps else "cpu",
             torch_dtype=torch.float16 if (has_cuda or has_mps) else torch.float32,
@@ -27,7 +40,7 @@ class LLMService:
             AutoTokenizer, LlamaTokenizerFast
         ] = AutoTokenizer.from_pretrained(llm_model)
         self._device = "cuda" if has_cuda else "mps" if has_mps else "cpu"
-        self._tpe = ThreadPoolExecutor(1)
+        self._tpe = ThreadPoolExecutor(1, initializer=disable_grad)
 
     @timing_decorator
     def complete(self, data: List[ChatMessage], **kwargs) -> Iterator[str]:
