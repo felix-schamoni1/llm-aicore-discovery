@@ -1,8 +1,7 @@
 import asyncio
-import datetime
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Dict, Iterator, Union
+from typing import List, Iterator, Union
 
 from torch.cuda import OutOfMemoryError, empty_cache
 
@@ -33,7 +32,7 @@ class LLMService:
             llm_model,
             device_map="auto" if has_cuda else "mps" if has_mps else "cpu",
             torch_dtype=torch.float16 if (has_cuda or has_mps) else torch.float32,
-            use_flash_attention_2=has_cuda,
+            use_flash_attention_2=False,
         )
 
         self._tokenizer: Union[
