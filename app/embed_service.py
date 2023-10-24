@@ -3,11 +3,11 @@ from typing import List
 import numpy as np
 
 from app.settings import (
-    has_cuda,
     embedding_model,
     model_folder,
     timing_decorator,
     has_mps,
+    disable_grad,
 )
 
 
@@ -16,9 +16,10 @@ class EmbeddingService:
     def __init__(self):
         from sentence_transformers import SentenceTransformer
 
+        disable_grad()
         self._st = SentenceTransformer(
             embedding_model,
-            device="cuda" if has_cuda else "mps" if has_mps else "cpu",
+            device="mps" if has_mps else "cpu",
             cache_folder=model_folder,
         )
 

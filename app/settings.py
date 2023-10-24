@@ -36,3 +36,9 @@ def timing_decorator(func):
         return result
 
     return wrapper
+
+
+def disable_grad():
+    import torch
+
+    torch.set_grad_enabled(False)

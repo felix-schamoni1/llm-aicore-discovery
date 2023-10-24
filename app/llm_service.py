@@ -6,13 +6,7 @@ from typing import List, Iterator, Union
 from torch.cuda import OutOfMemoryError, empty_cache
 
 from app.datamodel import ChatMessage
-from app.settings import llm_model, has_cuda, timing_decorator, has_mps
-
-
-def disable_grad():
-    import torch
-
-    torch.set_grad_enabled(False)
+from app.settings import llm_model, has_cuda, timing_decorator, has_mps, disable_grad
 
 
 class LLMService:
