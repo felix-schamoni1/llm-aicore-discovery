@@ -19,6 +19,14 @@ embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 llm_model = os.getenv("LLM_MODEL", "mistralai/Mistral-7B-Instruct-v0.1")
 http_prefix = os.getenv("HTTP_PREFIX", "")
 
+
+if os.getenv("REQUIRE_CUDA", "") in ["1", "y", "Y"]:
+    assert has_cuda, "CUDA not available."
+    import torch
+
+    for i in range(torch.cuda.device_count()):
+        print(torch.cuda.get_device_properties(i))
+
 root_folder = Path(__file__).parent.parent.resolve()
 model_folder = root_folder / "models"
 model_folder.mkdir(exist_ok=True)

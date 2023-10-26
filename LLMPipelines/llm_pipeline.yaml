@@ -33,3 +33,5 @@ spec:
             value: T-Systems-onsite/cross-en-de-roberta-sentence-transformer
           - name: HTTP_PREFIX
             value: /v1
+          - name: REQUIRE_CUDA
+            value: 1
