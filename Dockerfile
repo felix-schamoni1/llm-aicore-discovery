@@ -26,7 +26,7 @@ FROM --platform=amd64 huggingface/transformers-pytorch-gpu:4.29.2 as base
 
 WORKDIR /workspace
 ENV PATH="/usr/local/lib/python3.10/bin:$PATH"
-RUN python -c "import torch; print(torch.__version__)" && pip show torch
+RUN python3 -c "import torch; print(torch.__version__)" && pip show torch
 COPY requirements.txt requirements.txt
 COPY constraints.txt constraints.txt
 COPY srv.py srv.py
@@ -34,4 +34,4 @@ COPY app/ app/
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python", "srv.py"]
+ENTRYPOINT ["python3", "srv.py"]

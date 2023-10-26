@@ -1,4 +1,4 @@
-transformers
+transformers>=4.34.1
 fastapi
 sentence-transformers
 torch
