@@ -1,0 +1,28 @@
+apiVersion: ai.sap.com/v1alpha1
+kind: ServingTemplate
+metadata:
+  name: mistral-llm #Enter a unique name here
+  annotations:
+    scenarios.ai.sap.com/description: "Mistral on AI Core"
+    scenarios.ai.sap.com/name: "mistral-ai-core"
+    executables.ai.sap.com/description: "Mistral GPU Serving executable"
+    executables.ai.sap.com/name: "mistral-ai-core-serve"
+  labels:
+    scenarios.ai.sap.com/id: "mistral-ai-core-serve"
+    ai.sap.com/version: "1.0.0"
+spec:
+  template:
+    apiVersion: "serving.kubeflow.org/v1beta1"
+    metadata:
+      labels: |
+        ai.sap.com/resourcePlan: train-l
+    spec: |
+      predictor:
+        imagePullSecrets:
+          - name: nf-dockerhub-sovanta
+        containers:
+        - name: kserve-container
+          image: niklasfruehauf/sovanta:llm-service-latest
+          ports:
+            - containerPort: 8000
+              protocol: TCP
