@@ -37,5 +37,6 @@ RUN pip install -r requirements.txt
 RUN chgrp -R nogroup /workspace && \
     chmod -R 777 /workspace
 
+ENV PYTORCH_KERNEL_CACHE_PATH=/workspace
 
 ENTRYPOINT ["python3", "srv.py"]

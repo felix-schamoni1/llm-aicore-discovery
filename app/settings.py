@@ -17,13 +17,15 @@ has_mps = torch.backends.mps.is_available()
 
 embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 llm_model = os.getenv("LLM_MODEL", "mistralai/Mistral-7B-Instruct-v0.1")
-http_prefix = os.getenv("HTTP_PREFIX", "")
+
+true_vals = ["1", "y", "Y"]
+is_ai_core = os.getenv("AI_CORE", "") in true_vals
+
+http_prefix = "" if not is_ai_core else "/v1"
+use_flash_attn = is_ai_core
 
 
-if os.getenv("REQUIRE_CUDA", "") in ["1", "y", "Y"]:
-    assert has_cuda, "CUDA not available."
-    import torch
-
+if has_cuda:
     for i in range(torch.cuda.device_count()):
         print(torch.cuda.get_device_properties(i))
 

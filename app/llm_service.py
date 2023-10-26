@@ -6,7 +6,15 @@ from typing import List, Iterator, Union
 from torch.cuda import OutOfMemoryError, empty_cache
 
 from app.datamodel import ChatMessage
-from app.settings import llm_model, has_cuda, timing_decorator, has_mps, disable_grad
+from app.settings import (
+    llm_model,
+    has_cuda,
+    timing_decorator,
+    has_mps,
+    disable_grad,
+    use_flash_attn,
+    is_ai_core,
+)
 
 
 class LLMService:
@@ -26,7 +34,8 @@ class LLMService:
             llm_model,
             device_map="auto" if has_cuda else "mps" if has_mps else "cpu",
             torch_dtype=torch.float16 if (has_cuda or has_mps) else torch.float32,
-            use_flash_attention_2=False,
+            use_flash_attention_2=use_flash_attn,
+            max_memory=None if not is_ai_core else {0: "16GB", "cpu": "32GB"},
         )
 
         logging.info("Model Loaded, Device Map: %s", self._llm.hf_device_map)
