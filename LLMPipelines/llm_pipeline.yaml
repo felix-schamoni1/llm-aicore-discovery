@@ -34,4 +34,4 @@ spec:
           - name: HTTP_PREFIX
             value: /v1
           - name: REQUIRE_CUDA
-            value: 1
+            value: '1'
