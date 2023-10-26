@@ -16,7 +16,7 @@ from app.datamodel import (
     CompletionRequest,
     ChatMessage,
 )
-from app.settings import embedding_model, timing_decorator
+from app.settings import embedding_model, timing_decorator, http_prefix
 
 if TYPE_CHECKING:
     from app.embed_service import EmbeddingService
@@ -40,18 +40,18 @@ def startup():
     srv_llm = LLMService()
 
 
-@app.get("/info")
+@app.get(f"{http_prefix}/info")
 def info() -> InfoReply:
     return InfoReply(embedding_model=embedding_model)
 
 
-@app.get("/")
+@app.get(f"{http_prefix}/")
 def index():
     with open("app/chat.html") as fp:
         return HTMLResponse(fp.read())
 
 
-@app.post("/embed")
+@app.post(f"{http_prefix}/embed")
 @timing_decorator
 def embed(data: EmbeddingRequest) -> EmbeddingReply:
     if not data.documents:
@@ -69,7 +69,7 @@ def embed(data: EmbeddingRequest) -> EmbeddingReply:
     return EmbeddingReply(embeddings=fn(data.documents).tolist())
 
 
-@app.post("/complete")
+@app.post(f"{http_prefix}/complete")
 @timing_decorator
 def complete(completion: CompletionRequest) -> str:
     config = copy.copy(base_config)
@@ -83,7 +83,7 @@ def handle_error(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"message": str(exc)})
 
 
-@app.websocket("/ws")
+@app.websocket(f"{http_prefix}/ws")
 async def websocket(ws: WebSocket):
     await ws.accept()
 

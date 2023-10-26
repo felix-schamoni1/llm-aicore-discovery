@@ -17,6 +17,7 @@ has_mps = torch.backends.mps.is_available()
 
 embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 llm_model = os.getenv("LLM_MODEL", "mistralai/Mistral-7B-Instruct-v0.1")
+http_prefix = os.getenv("HTTP_PREFIX", "")
 
 root_folder = Path(__file__).parent.parent.resolve()
 model_folder = root_folder / "models"

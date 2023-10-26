@@ -44,9 +44,10 @@ class LLMService:
             [d.model_dump() for d in data[-10:]], tokenize=False
         )
         logging.info("Prompt: %s", text_template)
-        encoded_values = self._tokenizer.encode(text_template, return_tensors="pt")[
-            :, -2048:
-        ].to(self._device)
+        encoded_values = self._tokenizer.encode(text_template, return_tensors="pt")
+        if "max_input_length" in kwargs:
+            encoded_values = encoded_values[:, -kwargs.get("max_input_length", 2048) :]
+        encoded_values = encoded_values.to(self._device)
         logging.info("Prompt Size: %d", encoded_values.shape[-1])
         streamer = TextIteratorStreamer(self._tokenizer, skip_prompt=True)
 
