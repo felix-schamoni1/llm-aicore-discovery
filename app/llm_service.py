@@ -30,12 +30,17 @@ class LLMService:
 
         disable_grad()
 
-        self._llm: MistralForCausalLM = AutoModelForCausalLM.from_pretrained(
-            llm_model,
+        kwargs = dict(
             device_map="auto" if has_cuda else "mps" if has_mps else "cpu",
             torch_dtype=torch.float16 if (has_cuda or has_mps) else torch.float32,
             use_flash_attention_2=use_flash_attn,
             max_memory=None if not is_ai_core else {0: "16GB", "cpu": "32GB"},
+        )
+
+        logging.info("Starting with args: %s", kwargs)
+        self._llm: MistralForCausalLM = AutoModelForCausalLM.from_pretrained(
+            llm_model,
+            **kwargs,
         )
 
         logging.info("Model Loaded, Device Map: %s", self._llm.hf_device_map)

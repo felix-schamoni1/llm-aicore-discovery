@@ -19,10 +19,10 @@ embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 llm_model = os.getenv("LLM_MODEL", "mistralai/Mistral-7B-Instruct-v0.1")
 
 true_vals = ["1", "y", "Y"]
-is_ai_core = os.getenv("AI_CORE", "") in true_vals
+is_ai_core = os.getenv("AI_CORE", "0") in true_vals
 
 http_prefix = "" if not is_ai_core else "/v1"
-use_flash_attn = is_ai_core
+use_flash_attn = os.getenv("USE_FLASH_ATTN", "0") in true_vals
 
 
 if has_cuda:
