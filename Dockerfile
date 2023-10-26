@@ -34,4 +34,8 @@ COPY app/ app/
 
 RUN pip install -r requirements.txt
 
+RUN chgrp -R nogroup /workspace && \
+    chmod -R 777 /workspace
+
+
 ENTRYPOINT ["python3", "srv.py"]
