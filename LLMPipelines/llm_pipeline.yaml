@@ -24,14 +24,14 @@ spec:
         maxReplicas: 1    # how much to scale
         containers:
         - name: kserve-container
-          image: niklasfruehauf/sovanta:llm-service-latest
+          image: "niklasfruehauf/sovanta:llm-service-latest"
           ports:
             - containerPort: 8000
               protocol: TCP
           env:
           - name: EMBEDDING_MODEL
-            value: T-Systems-onsite/cross-en-de-roberta-sentence-transformer
+            value: "T-Systems-onsite/cross-en-de-roberta-sentence-transformer"
           - name: HTTP_PREFIX
-            value: /v1
+            value: "/v1"
           - name: REQUIRE_CUDA
-            value: '1'
+            value: "1"

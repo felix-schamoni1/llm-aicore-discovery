@@ -1,4 +1,6 @@
-FROM --platform=amd64 nvcr.io/nvidia/pytorch:23.09-py3 as base
+# FROM --platform=amd64 nvcr.io/nvidia/pytorch:23.09-py3 as base
+FROM --platform=amd64 huggingface/transformers-pytorch-gpu:4.29.2 as base
+
 
 # Ubuntu 22.04 including Python 3.10
 #NVIDIA CUDA® 12.2.1
