@@ -1,3 +1,4 @@
+# used for final testing of the deployed LLM
 # pip install ai-core-sdk
 import json
 
@@ -10,7 +11,7 @@ from app.settings import timing_decorator
 with open("aicore.json", "r", encoding="utf8") as fp:
     cfg = json.load(fp)
 
-url = "https://api.ai.prod.eu-central-1.aws.ml.hana.ondemand.com/v2/inference/deployments/d06a368280da5acd/v1/"
+url = "<your-deployment-id>"
 
 client = AICoreV2Client(
     base_url=cfg["serviceurls"]["AI_API_URL"],
@@ -26,11 +27,6 @@ sess.headers.update(
 )
 sess.post = timing_decorator(sess.post)
 
-# print(
-#     sess.post(
-#         url + "embed", json=EmbeddingRequest(documents=["hello World"]).model_dump()
-#     ).json()
-# )
 print(
     sess.post(
         url + "complete",
@@ -44,7 +40,7 @@ print(
 
 print(
     sess.post(
-        "http://srv-ml01.sovanta.com:8000/complete",
+        "<your-server-url>",
         json=CompletionRequest(
             messages=[ChatMessage(content="What's the story of the Eiffel Tower?")],
             config={"do_sample": True, "max_new_tokens": 20},

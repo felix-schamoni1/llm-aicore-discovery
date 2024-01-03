@@ -1,9 +1,10 @@
+# returns docker hub secret in the correct format for AI Core
 import json
 
 value = {
     "auths": {
         "https://index.docker.io/v1/": {
-            "username": "niklasfruehauf",
+            "username": "<your user-name>",
             "password": "XXX",
         }
     }
