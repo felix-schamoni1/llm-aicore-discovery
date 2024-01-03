@@ -28,7 +28,6 @@ WORKDIR /workspace
 ENV PATH="/usr/local/lib/python3.10/bin:$PATH"
 RUN python3 -c "import torch; print(torch.__version__)" && pip show torch
 COPY requirements.txt requirements.txt
-COPY constraints.txt constraints.txt
 COPY srv.py srv.py
 COPY app/ app/
 
