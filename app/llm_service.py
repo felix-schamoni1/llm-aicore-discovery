@@ -103,7 +103,7 @@ if __name__ == "__main__":
     dx = []
     for text in llm.complete(
         [ChatMessage(role="user", content="Whats the story behind the Eiffel tower?")],
-        max_new_tokens=20,
+        max_new_tokens=5,
     ):
         dx.append(text)
 

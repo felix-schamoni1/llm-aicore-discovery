@@ -4,7 +4,7 @@ import json
 import requests
 from ai_core_sdk.ai_core_v2_client import AICoreV2Client
 
-from app.datamodel import EmbeddingRequest, CompletionRequest, ChatMessage
+from app.datamodel import CompletionRequest, ChatMessage
 from app.settings import timing_decorator
 
 with open("aicore.json", "r", encoding="utf8") as fp:
@@ -26,11 +26,11 @@ sess.headers.update(
 )
 sess.post = timing_decorator(sess.post)
 
-print(
-    sess.post(
-        url + "embed", json=EmbeddingRequest(documents=["hello World"]).model_dump()
-    ).json()
-)
+# print(
+#     sess.post(
+#         url + "embed", json=EmbeddingRequest(documents=["hello World"]).model_dump()
+#     ).json()
+# )
 print(
     sess.post(
         url + "complete",

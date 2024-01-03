@@ -12,10 +12,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)-s %(levelname)-s - %(message)s",
 )
-has_cuda = torch.cuda.is_available()
-has_mps = torch.backends.mps.is_available()
+has_cuda = False  # torch.cuda.is_available()
+has_mps = False  # torch.backends.mps.is_available()
 
-embedding_model = os.getenv("EMBEDDING_MODEL", "BAAI/bge-base-en-v1.5")
 llm_model = os.getenv("LLM_MODEL", "mistralai/Mistral-7B-Instruct-v0.1")
 
 true_vals = ["1", "y", "Y"]

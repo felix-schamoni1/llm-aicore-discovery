@@ -1,29 +1,18 @@
-import collections
 import copy
-import logging
 from typing import TYPE_CHECKING, Optional
 
 from fastapi import FastAPI
-from starlette.requests import Request
-from starlette.responses import JSONResponse, HTMLResponse
-from starlette.websockets import WebSocket, WebSocketDisconnect
+
 
 from app.datamodel import (
-    EmbeddingRequest,
-    EmbeddingReply,
-    InfoReply,
-    EmbeddingTypeEnum,
     CompletionRequest,
-    ChatMessage,
 )
-from app.settings import embedding_model, timing_decorator, http_prefix
+from app.settings import timing_decorator, http_prefix
 
 if TYPE_CHECKING:
-    from app.embed_service import EmbeddingService
     from app.llm_service import LLMService
 
 app = FastAPI()
-srv_embed: Optional["EmbeddingService"] = None
 srv_llm: Optional["LLMService"] = None
 
 base_config = {"do_sample": True, "max_new_tokens": 200}
@@ -32,41 +21,10 @@ base_config = {"do_sample": True, "max_new_tokens": 200}
 @app.on_event("startup")
 @timing_decorator
 def startup():
-    global srv_embed, srv_llm
-    from app.embed_service import EmbeddingService
+    global srv_llm
     from app.llm_service import LLMService
 
-    srv_embed = EmbeddingService()
     srv_llm = LLMService()
-
-
-@app.get(f"{http_prefix}/info")
-def info() -> InfoReply:
-    return InfoReply(embedding_model=embedding_model)
-
-
-@app.get(f"{http_prefix}/")
-def index():
-    with open("app/chat.html") as fp:
-        return HTMLResponse(fp.read())
-
-
-@app.post(f"{http_prefix}/embed")
-@timing_decorator
-def embed(data: EmbeddingRequest) -> EmbeddingReply:
-    if not data.documents:
-        return EmbeddingReply(embeddings=[])
-
-    if data.embedding_type == EmbeddingTypeEnum.DEFAULT:
-        fn = srv_embed.embed
-    elif data.embedding_type == EmbeddingTypeEnum.QUERY:
-        fn = srv_embed.embed_query
-    elif data.embedding_type == EmbeddingTypeEnum.DOCUMENT:
-        fn = srv_embed.embed_document
-    else:
-        raise ValueError(f"Unknown embedding type {data.embedding_type}")
-
-    return EmbeddingReply(embeddings=fn(data.documents).tolist())
 
 
 @app.post(f"{http_prefix}/complete")
@@ -76,40 +34,6 @@ def complete(completion: CompletionRequest) -> str:
     config.update(completion.config)
     res = list(srv_llm.complete(completion.messages, **config))
     return res[-2]
-
-
-@app.exception_handler(Exception)
-def handle_error(request: Request, exc: Exception):
-    return JSONResponse(status_code=500, content={"message": str(exc)})
-
-
-@app.websocket(f"{http_prefix}/ws")
-async def websocket(ws: WebSocket):
-    await ws.accept()
-
-    conversation = collections.deque(maxlen=20)
-
-    try:
-        while True:
-            user_in = CompletionRequest(**await ws.receive_json())
-            logging.info("Handling: %s", user_in)
-            conversation.append(user_in.messages[0])
-
-            config = copy.copy(base_config)
-            config.update(user_in.config)
-
-            output = None
-
-            for message in srv_llm.complete(list(conversation), **config):
-                await ws.send_text(message)
-                if message != "<FINISH>":
-                    output = message
-
-            if output:
-                conversation.append(ChatMessage(role="assistant", content=output))
-
-    except WebSocketDisconnect:
-        pass
 
 
 if __name__ == "__main__":
